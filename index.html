@@ -742,7 +742,7 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.6</div>
+                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.7</div>
                     <button class="btn-start" onclick="iniciarChecklist()">Iniciar Checklist</button>
                 </div>
             </div>
@@ -1597,6 +1597,7 @@ function duracionContratoPDF() {
 const stemsPDFPorConcepto = {
     'CALCOMANIAS_Y_PINTURA': ['CALCOMANIAS'],
     'PORTAPAPELES': ['INSTRUCCIONES'],
+    'LLAVE_DEL_EQUIPO': ['LLAVE'],
     'MANIJA_DESCENSO_DE_EMERGENCIA': ['VALVULA'],
     'FUGA_HIDRAULICA': ['FUGAHIDRA', 'FUGASHIDRA'],
     'CANASTA_BASE_DE_OPERACION': ['CANASTILLA'],
@@ -1662,6 +1663,14 @@ function mapaValoresPDF() {
             valores[stem + 'E'] = valor;
             valores[stem + 'R'] = '';
         });
+        // Estos tres nombres de salida no siguen el patrón general de la plantilla.
+        if (clave === 'CONTROL_SUPERIOR') {
+            valores.CONTROLS = valor;
+            valores.CONTROLSR = '';
+        } else if (clave === 'CONTROL_INFERIOR') {
+            valores.CONTROLE = valor;
+            valores.CONTROLR = '';
+        }
         const comentario = obtenerComentarioPDF(item);
         valores['COMENTARIOS_' + clave] = comentario;
         if (clave === 'FUGA_HIDRAULICA') valores.COMENTARIOS_FUGAS_HIDRAULICAS = comentario;
@@ -1682,10 +1691,10 @@ function mapaValoresPDF() {
     return valores;
 }
 
-function imagenPDF(data, etiqueta, reducirAl50 = false) {
+function imagenPDF(data, etiqueta, usarRecuadroCompleto = false) {
     if (!data) return '';
-    const estilo = reducirAl50
-        ? 'display:block;width:50%;max-width:50%;max-height:50%;height:auto;object-fit:contain;margin:0 auto;'
+    const estilo = usarRecuadroCompleto
+        ? 'display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;margin:0 auto;'
         : 'max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;';
     return '<img src="' + escaparTextoPDF(data) + '" alt="' + escaparTextoPDF(etiqueta || '') + '" style="' + estilo + '">';
 }

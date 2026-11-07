@@ -742,7 +742,7 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.3</div>
+                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.4</div>
                     <button class="btn-start" onclick="iniciarChecklist()">Iniciar Checklist</button>
                 </div>
             </div>
@@ -1751,25 +1751,20 @@ function generarHTMLChecklist() {
                 datosChecklist.nombreReceptor = document.getElementById('nombreReceptor').value;
 
                 const htmlChecklist = generarHTMLChecklist();
-                const formData = new FormData();
-                // Make recibe únicamente el HTML literal y el ROW ID.
-                formData.append('htmlChecklist', htmlChecklist);
-                formData.append('rowId', String(datosChecklist.rowId || ''));
+                // Mandar los dos campos como texto de formulario, sin adjuntos ni más datos.
+                const datosEnvio = new URLSearchParams();
+                datosEnvio.set('htmlChecklist', htmlChecklist);
+                datosEnvio.set('rowId', String(datosChecklist.rowId || ''));
+                const cuerpoEnvio = datosEnvio.toString();
 
-                // Medir tamaño REAL aproximado de lo que se enviará
-                let totalBytes = 0;
-                for (const [, valor] of formData.entries()) {
-                    if (valor instanceof Blob) totalBytes += valor.size;
-                    else totalBytes += new Blob([String(valor)]).size;
-                }
+                const totalBytes = new Blob([cuerpoEnvio]).size;
                 console.log('📦 Tamaño aproximado del envío:', formatoMB(totalBytes), totalBytes, 'bytes');
 
                 const webhookURL = 'https://hook.us2.make.com/4vtkvrz1wd621ycc99r8mv9f22rigj7t';
 
                 fetch(webhookURL, {
                     method: 'POST',
-                    body: formData
-                    // IMPORTANTE: no poner Content-Type manualmente; el navegador agrega el boundary correcto.
+                    body: datosEnvio
                 })
                 .then(async response => {
                     const texto = await response.text();

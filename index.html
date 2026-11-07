@@ -1047,7 +1047,13 @@ const checklistConfig = {
         });
 
         function cargarDatosURL() {
-            const params = new URLSearchParams(window.location.search);
+            // Acepta el query normal y enlaces copiados desde texto/Markdown
+            // donde los separadores pueden venir escapados como \\&.
+            const queryMatch = window.location.href.match(/[?]([^#]*)/);
+            const query = (queryMatch ? queryMatch[1] : window.location.search.replace(/^\?/, ''))
+                .replace(/\\&/g, '&')
+                .replace(/%5C&/gi, '&');
+            const params = new URLSearchParams(query);
 
             tipoChecklist = params.get('tipoChecklist') || 'tijeras-electricas';
             const config = checklistConfig[tipoChecklist];

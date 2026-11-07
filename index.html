@@ -742,7 +742,7 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.2</div>
+                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.3</div>
                     <button class="btn-start" onclick="iniciarChecklist()">Iniciar Checklist</button>
                 </div>
             </div>
@@ -1750,52 +1750,11 @@ function generarHTMLChecklist() {
                 datosChecklist.signature = document.getElementById('signatureCanvas').toDataURL('image/png');
                 datosChecklist.nombreReceptor = document.getElementById('nombreReceptor').value;
 
-                const payload = transformarPayload();
                 const htmlChecklist = generarHTMLChecklist();
                 const formData = new FormData();
+                // Make recibe únicamente el HTML literal y el ROW ID.
                 formData.append('htmlChecklist', htmlChecklist);
-                formData.append('tipoChecklist', tipoChecklist);
-
-                // Datos de texto generales
-                const camposFoto = new Set(['INE_photo', 'signature']);
-                Object.entries(payload).forEach(([clave, valor]) => {
-                    if (camposFoto.has(clave) || clave.includes('_photo_')) return;
-                    if (valor !== null && valor !== undefined) {
-                        formData.append(clave, String(valor));
-                    }
-                });
-
-                // VERSIÓN 4.2: todos los archivos usan EXACTAMENTE el mismo nombre de campo: files
-                // Make debe agrupar los archivos repetidos como un único files[] (Array) de nivel superior.
-                // Además enviamos listaFotos como JSON pequeño para saber qué archivos debe haber.
-                const listaFotos = [];
-
-                for (let i = 0; i < checklistItems.length; i++) {
-                    const item = checklistItems[i];
-                    const datosItem = datosChecklist.items[i];
-                    const nombreColumna = normalizarNombreColumna(item.title);
-
-                    for (let j = 0; j < datosItem.photos.length; j++) {
-                        const foto = datosItem.photos[j];
-                        if (!foto) continue;
-                        const nombreArchivo = nombreColumna + '_photo_' + (j + 1) + '.jpg';
-                        listaFotos.push(nombreArchivo);
-                        formData.append('files', dataURLaBlob(foto), nombreArchivo);
-                    }
-                }
-
-                if (datosChecklist.inePhoto) {
-                    listaFotos.push('INE_photo.jpg');
-                    formData.append('files', dataURLaBlob(datosChecklist.inePhoto), 'INE_photo.jpg');
-                }
-
-                if (datosChecklist.signature) {
-                    listaFotos.push('signature.png');
-                    formData.append('files', dataURLaBlob(datosChecklist.signature), 'signature.png');
-                }
-
-                formData.append('listaFotos', JSON.stringify(listaFotos));
-                formData.append('versionHTML', '4.2');
+                formData.append('rowId', String(datosChecklist.rowId || ''));
 
                 // Medir tamaño REAL aproximado de lo que se enviará
                 let totalBytes = 0;

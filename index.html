@@ -742,7 +742,7 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4</div>
+                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.2</div>
                     <button class="btn-start" onclick="iniciarChecklist()">Iniciar Checklist</button>
                 </div>
             </div>
@@ -996,7 +996,7 @@ const checklistConfig = {
                     { title: 'ACEITE HIDRÁULICO', type: 'normal', requirement: 'Verificar nivel de aceite hidráulico', photos: 1 },
                     { title: 'EXTINTOR', type: 'normal', requirement: 'Comprobar presión y vigencia del extintor', photos: 1 }
                 ]
-            }
+            },
             'grua': {
                 nombre: 'Traslado de grúa',
                 items: [
@@ -1018,6 +1018,7 @@ const checklistConfig = {
         let checklistItems = [];
         let datosChecklist = {
             cliente: '',
+            tipoEquipo: '',
             numeroEquipo: '',
             modelo: '',
             serie: '',
@@ -1066,6 +1067,7 @@ const checklistConfig = {
             checklistItems = config.items;
 
             datosChecklist.cliente = params.get('cliente') || 'Cliente';
+            datosChecklist.tipoEquipo = params.get('tipoEquipo') || params.get('equipoTipo') || config.nombre;
             datosChecklist.numeroEquipo = params.get('numeroEquipo') || 'N/A';
             datosChecklist.modelo = params.get('modelo') || 'N/A';
             datosChecklist.serie = params.get('serie') || 'N/A';
@@ -1083,7 +1085,7 @@ const checklistConfig = {
             datosChecklist.rowId = params.get('rowId') || null;
 
             document.getElementById('driverName').textContent = datosChecklist.cliente;
-            document.getElementById('equipoNombre').textContent = config.nombre;
+            document.getElementById('equipoNombre').textContent = datosChecklist.tipoEquipo;
             document.getElementById('modeloNombre').textContent = datosChecklist.modelo;
             document.getElementById('serieNombre').textContent = datosChecklist.serie;
             document.getElementById('numeroNombre').textContent = datosChecklist.numeroEquipo;
@@ -1441,6 +1443,7 @@ function cargarItem() {
             const payloadTransformado = {
                 rowId: datosChecklist.rowId,
                 cliente: datosChecklist.cliente,
+                tipoEquipo: datosChecklist.tipoEquipo,
                 numeroEquipo: datosChecklist.numeroEquipo,
                 modelo: datosChecklist.modelo,
                 serie: datosChecklist.serie,
@@ -1632,7 +1635,7 @@ function mapaValoresPDF() {
         DESTINO: datosChecklist.direccion,
         FECHAVENCIMIENTO: datosChecklist.fechaVencimiento,
         NO_EQP: datosChecklist.numeroEquipo,
-        TIPO: checklistConfig[tipoChecklist] ? checklistConfig[tipoChecklist].nombre : '',
+        TIPO: datosChecklist.tipoEquipo || (checklistConfig[tipoChecklist] ? checklistConfig[tipoChecklist].nombre : ''),
         ALTURA: datosChecklist.alturaCapacidad,
         ANIO: anio,
         EMPRESA: empresa,
@@ -1762,7 +1765,7 @@ function generarHTMLChecklist() {
                     }
                 });
 
-                // VERSIÓN 4: todos los archivos usan EXACTAMENTE el mismo nombre de campo: files
+                // VERSIÓN 4.2: todos los archivos usan EXACTAMENTE el mismo nombre de campo: files
                 // Make debe agrupar los archivos repetidos como un único files[] (Array) de nivel superior.
                 // Además enviamos listaFotos como JSON pequeño para saber qué archivos debe haber.
                 const listaFotos = [];
@@ -1792,7 +1795,7 @@ function generarHTMLChecklist() {
                 }
 
                 formData.append('listaFotos', JSON.stringify(listaFotos));
-                formData.append('versionHTML', '4');
+                formData.append('versionHTML', '4.2');
 
                 // Medir tamaño REAL aproximado de lo que se enviará
                 let totalBytes = 0;

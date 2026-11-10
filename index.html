@@ -783,7 +783,7 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 5.1</div>
+                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 5.3</div>
                     <button class="btn-start" onclick="iniciarChecklist()">Iniciar Checklist</button>
                 </div>
             </div>
@@ -1897,6 +1897,10 @@ function adaptarHTMLAOperacion(html) {
                 datosEnvio.set('htmlChecklist', htmlChecklist);
                 datosEnvio.set('rowId', String(datosChecklist.rowId || ''));
                 datosEnvio.set('entrega', datosChecklist.entrega);
+                datosEnvio.set('operacion', tipoOperacion === 'recoleccion' ? 'recolección' : 'entrega');
+                const itemHoras = datosChecklist.items.find(item => normalizarNombreColumna(item.title) === 'HORAS');
+                datosEnvio.set('numeroEquipo', String(datosChecklist.numeroEquipo || ''));
+                datosEnvio.set('horas', itemHoras && itemHoras.inputValue != null ? String(itemHoras.inputValue) : '');
                 const cuerpoEnvio = datosEnvio.toString();
 
                 const totalBytes = new Blob([cuerpoEnvio]).size;

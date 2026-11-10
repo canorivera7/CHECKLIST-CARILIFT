@@ -228,6 +228,49 @@
             box-shadow: 0 4px 10px rgba(0, 221, 0, 0.2);
         }
 
+        /* OPERACIÓN: ENTREGA O RECOLECCIÓN */
+        .operation-screen {
+            min-height: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: linear-gradient(145deg, #fffaf0 0%, #ffffff 55%, #f8fafc 100%);
+        }
+
+        .operation-card {
+            width: min(100%, 560px);
+            padding: clamp(20px, 3.5vw, 32px);
+            text-align: center;
+            background: #fff;
+            border: 2px solid #f59e0b;
+            border-radius: 20px;
+            box-shadow: 0 12px 36px rgba(30, 41, 59, 0.12);
+        }
+
+        .operation-alert-icon { font-size: 40px; line-height: 1; margin-bottom: 10px; }
+        .operation-title { margin: 0 0 8px; color: #171717; font-size: clamp(23px, 4vw, 30px); font-weight: 800; }
+        .operation-warning { margin: 0 auto 18px; max-width: 420px; color: #7c2d12; font-size: 16px; line-height: 1.4; font-weight: 700; }
+        .operation-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 16px; }
+        .operation-choice {
+            min-height: 76px; padding: 12px 8px; border: 2px solid #cbd5e1; border-radius: 14px;
+            background: #fff; color: #1f2937; font-size: 18px; font-weight: 800; cursor: pointer;
+        }
+        .operation-choice small { font-size: 13px; font-weight: 600; }
+        .operation-choice.selected { border-color: #00cc00; background: #efffee; box-shadow: 0 0 0 4px rgba(0, 204, 0, 0.13); color: #087a08; }
+        .operation-choice:focus-visible, .operation-continue:focus-visible { outline: 4px solid #2563eb; outline-offset: 3px; }
+        .operation-continue {
+            width: 100%; min-height: 52px; border: 0; border-radius: 12px; background: #00cc00;
+            color: #071207; font-size: 17px; font-weight: 800; cursor: pointer;
+        }
+        .operation-continue:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
+        @media (max-width: 520px) {
+            .operation-screen { padding: 14px; }
+            .operation-options { grid-template-columns: 1fr; gap: 10px; }
+            .operation-choice { min-height: 68px; }
+        }
+
         /* INSPECTION SCREEN */
         .inspection-screen {
             padding: 20px 16px 8px;
@@ -708,9 +751,7 @@
                         <div class="greeting">
                             Buenos días,<br><span class="greeting-name" id="driverName">Conductor</span>
                         </div>
-                        <p class="subtitle">
-                            Estás por iniciar el checklist de entrega
-                        </p>
+                        <p class="subtitle">Estás por iniciar el checklist del equipo</p>
                     </div>
 
                     <div class="equipment-card">
@@ -742,8 +783,24 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 4.9</div>
+                    <div style="text-align:center;font-size:12px;font-weight:700;color:#666;margin-bottom:8px;">VERSIÓN 5.1</div>
                     <button class="btn-start" onclick="iniciarChecklist()">Iniciar Checklist</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SELECTOR DE OPERACIÓN -->
+        <div class="screen" id="screen-operation">
+            <div class="operation-screen">
+                <div class="operation-card">
+                    <div class="operation-alert-icon" aria-hidden="true">⚠️</div>
+                    <h1 class="operation-title">¿Qué operación harás?</h1>
+                    <p class="operation-warning">Selecciona la opción correcta.</p>
+                    <div class="operation-options">
+                        <button type="button" class="operation-choice" id="choiceEntrega" onclick="seleccionarOperacion('entrega')">ENTREGA<br><small>Al cliente</small></button>
+                        <button type="button" class="operation-choice" id="choiceRecoleccion" onclick="seleccionarOperacion('recoleccion')">RECOLECCIÓN<br><small>De regreso</small></button>
+                    </div>
+                    <button type="button" class="operation-continue" id="btnConfirmarOperacion" disabled onclick="confirmarOperacion()">Selecciona una opción</button>
                 </div>
             </div>
         </div>
@@ -1016,6 +1073,7 @@ const checklistConfig = {
         // ============================================
         let currentStep = 0;
         let tipoChecklist = null;
+        let tipoOperacion = null;
         let checklistItems = [];
         let datosChecklist = {
             cliente: '',
@@ -1110,6 +1168,36 @@ const checklistConfig = {
         }
 
         function iniciarChecklist() {
+            tipoOperacion = null;
+            document.getElementById('choiceEntrega').classList.remove('selected');
+            document.getElementById('choiceRecoleccion').classList.remove('selected');
+            const confirmButton = document.getElementById('btnConfirmarOperacion');
+            confirmButton.disabled = true;
+            confirmButton.textContent = 'Selecciona una opción';
+            mostrarPantalla('screen-operation');
+        }
+
+        function seleccionarOperacion(operacion) {
+            if (operacion !== 'entrega' && operacion !== 'recoleccion') return;
+            tipoOperacion = operacion;
+            document.getElementById('choiceEntrega').classList.toggle('selected', operacion === 'entrega');
+            document.getElementById('choiceRecoleccion').classList.toggle('selected', operacion === 'recoleccion');
+            const confirmButton = document.getElementById('btnConfirmarOperacion');
+            confirmButton.disabled = false;
+            confirmButton.textContent = 'Confirmar ' + (operacion === 'entrega' ? 'ENTREGA' : 'RECOLECCIÓN');
+        }
+
+        function confirmarOperacion() {
+            if (!tipoOperacion) return;
+            document.getElementById('itemSubtitle').textContent = tipoOperacion === 'entrega'
+                ? 'OPERACIÓN: ENTREGA'
+                : 'OPERACIÓN: RECOLECCIÓN';
+            document.querySelector('#screen-signature .inspection-title').textContent = tipoOperacion === 'entrega'
+                ? 'Información del Receptor'
+                : 'Información de la Recolección';
+            document.querySelector('#screen-signature .requirement-box').textContent = tipoOperacion === 'entrega'
+                ? 'Completa tu información y firma para confirmar la entrega'
+                : 'Completa tu información y firma para confirmar la recolección';
             mostrarPantalla('screen-inspection');
             document.getElementById('progressContainer').style.display = 'block';
             currentStep = 0;
@@ -1649,13 +1737,13 @@ function mapaValoresPDF() {
         DURACION: duracionContratoPDF(),
         EQUIPO: datosChecklist.modelo || (checklistConfig[tipoChecklist] ? checklistConfig[tipoChecklist].nombre : ''),
         ENTREGA: datosChecklist.solicito,
-        INSPECTORE: inspector,
-        INSPECTORR: inspector,
+        INSPECTORE: tipoOperacion === 'recoleccion' ? '' : inspector,
+        INSPECTORR: tipoOperacion === 'recoleccion' ? inspector : '',
         FECHAINSE: fechaHoy,
-        FECHAINSR: fechaHoy,
+        FECHAINSR: tipoOperacion === 'recoleccion' ? fechaHoy : '',
         FIRMA: datosChecklist.signature || '',
-        FIRMA_SALIDA: datosChecklist.signature || '',
-        FIRMA_ENTRADA: '',
+        FIRMA_SALIDA: tipoOperacion === 'recoleccion' ? '' : (datosChecklist.signature || ''),
+        FIRMA_ENTRADA: tipoOperacion === 'recoleccion' ? (datosChecklist.signature || '') : '',
         INE: datosChecklist.inePhoto || ''
     };
 
@@ -1664,16 +1752,16 @@ function mapaValoresPDF() {
         const valor = valorRespuestaPDF(item);
         const stems = stemsPDFPorConcepto[clave] || [clave.replace(/_/g, '')];
         stems.forEach(stem => {
-            valores[stem + 'E'] = valor;
-            valores[stem + 'R'] = '';
+            valores[stem + 'E'] = tipoOperacion === 'recoleccion' ? '' : valor;
+            valores[stem + 'R'] = tipoOperacion === 'recoleccion' ? valor : '';
         });
         // Estos tres nombres de salida no siguen el patrón general de la plantilla.
         if (clave === 'CONTROL_SUPERIOR') {
-            valores.CONTROLS = valor;
-            valores.CONTROLSR = '';
+            valores.CONTROLS = tipoOperacion === 'recoleccion' ? '' : valor;
+            valores.CONTROLSR = tipoOperacion === 'recoleccion' ? valor : '';
         } else if (clave === 'CONTROL_INFERIOR') {
-            valores.CONTROLE = valor;
-            valores.CONTROLR = '';
+            valores.CONTROLE = tipoOperacion === 'recoleccion' ? '' : valor;
+            valores.CONTROLR = tipoOperacion === 'recoleccion' ? valor : '';
         }
         const comentario = obtenerComentarioPDF(item);
         valores['COMENTARIOS_' + clave] = comentario;
@@ -1685,12 +1773,12 @@ function mapaValoresPDF() {
         const carga = buscarItemPDF('CARGA DEL EQUIPO');
         const estado = valorRespuestaPDF(carga);
         const comentario = obtenerComentarioPDF(carga);
-        valores.CARGAE = estado;
-        valores.CARGAR = estado;
-        valores.COMENTARIOSE = comentario;
-        valores.COMENTARIOSR = comentario;
-        valores.FIRMAE = '';
-        valores.FIRMAR = datosChecklist.signature || '';
+        valores.CARGAE = tipoOperacion === 'recoleccion' ? '' : estado;
+        valores.CARGAR = tipoOperacion === 'recoleccion' ? estado : '';
+        valores.COMENTARIOSE = tipoOperacion === 'recoleccion' ? '' : comentario;
+        valores.COMENTARIOSR = tipoOperacion === 'recoleccion' ? comentario : '';
+        valores.FIRMAE = tipoOperacion === 'recoleccion' ? '' : (datosChecklist.signature || '');
+        valores.FIRMAR = tipoOperacion === 'recoleccion' ? (datosChecklist.signature || '') : '';
     }
     return valores;
 }
@@ -1706,15 +1794,17 @@ function imagenPDF(data, etiqueta, usarRecuadroCompleto = false) {
 function imagenPlantillaPDF(token) {
     const nombre = token.split(':')[0].replace(/^image_/i, '');
     if (/^INE$/i.test(nombre)) return imagenPDF(datosChecklist.inePhoto, 'INE', true);
-    if (/^FIRMA(_SALIDA)?$/i.test(nombre)) return imagenPDF(datosChecklist.signature, 'Firma');
-    if (/^FIRMA_ENTRADA$/i.test(nombre) || /^FIRMAE$/i.test(nombre)) return '';
-    if (/^FIRMAR$/i.test(nombre)) return imagenPDF(datosChecklist.signature, 'Firma');
+    if (/^FIRMA$/i.test(nombre)) return imagenPDF(datosChecklist.signature, 'Firma');
+    if (/^FIRMA_SALIDA$/i.test(nombre)) return tipoOperacion === 'recoleccion' ? '' : imagenPDF(datosChecklist.signature, 'Firma');
+    if (/^FIRMA_ENTRADA$/i.test(nombre) || /^FIRMAE$/i.test(nombre)) return tipoOperacion === 'recoleccion' ? imagenPDF(datosChecklist.signature, 'Firma') : '';
+    if (/^FIRMAR$/i.test(nombre)) return tipoOperacion === 'recoleccion' ? imagenPDF(datosChecklist.signature, 'Firma') : '';
     const traslado = nombre.match(/^equipo([1-4])([er])$/i);
     if (traslado) {
-        if (tipoChecklist !== 'grua' || traslado[2].toLowerCase() !== 'e') return '';
+        const ladoActivo = tipoOperacion === 'recoleccion' ? 'r' : 'e';
+        if (tipoChecklist !== 'grua' || traslado[2].toLowerCase() !== ladoActivo) return '';
         const itemCarga = buscarItemPDF('CARGA DEL EQUIPO');
         const foto = itemCarga && itemCarga.photos[Number(traslado[1]) - 1];
-        return imagenPDF(foto, 'Foto de carga del equipo', true);
+        return imagenPDF(foto, 'Foto de ' + (tipoOperacion === 'recoleccion' ? 'recolección' : 'entrega'), true);
     }
     const fotoMatch = nombre.match(/^(.+)_photo_(\d+)$/i);
     if (!fotoMatch) return '';
@@ -1728,7 +1818,7 @@ function generarHTMLChecklist() {
     const plantilla = plantillasHTMLPDF[codigo];
     if (!plantilla) throw new Error('No hay plantilla HTML para el tipo de checklist: ' + tipoChecklist);
     const valores = mapaValoresPDF();
-    return plantilla.replace(/\{\{([^{}]+)\}\}/g, (coincidencia, tokenOriginal) => {
+    let html = plantilla.replace(/\{\{([^{}]+)\}\}/g, (coincidencia, tokenOriginal) => {
         const token = tokenOriginal.trim();
         if (token === '...') return '';
         if (token === 'LOGO_BT') return escaparTextoPDF(logoContratoBT);
@@ -1742,6 +1832,40 @@ function generarHTMLChecklist() {
         }
         return '';
     });
+    return adaptarHTMLAOperacion(html);
+}
+
+function adaptarHTMLAOperacion(html) {
+    const esRecoleccion = tipoOperacion === 'recoleccion';
+    const primerIndice = esRecoleccion ? 2 : 0;
+
+    html = html.replace(/<table class="(checklist|transfer-table)">[\s\S]*?<\/table>/gi, tabla => {
+        tabla = tabla.replace(/<colgroup>[\s\S]*?<\/colgroup>/i,
+            '<colgroup><col style="width:50%"><col style="width:50%"></colgroup>');
+        return tabla.replace(/(<tr\b[^>]*>)([\s\S]*?)(<\/tr>)/gi, (fila, inicio, contenido, fin) => {
+            const celdas = [...contenido.matchAll(/<(th|td)\b[\s\S]*?<\/\1>/gi)];
+            if (celdas.length !== 2 && celdas.length !== 4) return fila;
+            let indice = 0;
+            const contenidoFiltrado = contenido.replace(/<(th|td)\b[\s\S]*?<\/\1>/gi, celda => {
+                const actual = indice++;
+                const conservar = celdas.length === 2
+                    ? actual === (esRecoleccion ? 1 : 0)
+                    : actual === primerIndice || actual === primerIndice + 1;
+                return conservar ? celda : '';
+            });
+            return inicio + contenidoFiltrado + fin;
+        });
+    });
+
+    const columnaOculta = esRecoleccion ? 1 : 2;
+    const firmaOculta = esRecoleccion ? 1 : 2;
+    const estiloOperacion = '<style>.below-table .side-fields:nth-child(' + columnaOculta + '),.signatures .signature-box:nth-child(' + firmaOculta + '){display:none!important}.below-table,.signatures{grid-template-columns:1fr!important}</style>';
+    html = html.replace(/<\/head>/i, estiloOperacion + '</head>');
+
+    const titulo = esRecoleccion ? 'CHECKLIST DE RECOLECCIÓN' : 'CHECKLIST DE ENTREGA';
+    html = html.replace(/CHECKLIST PARA RENTA/g, titulo);
+    html = html.replace(/CHECKLIST PARA TRASLADO/g, 'CHECKLIST DE TRASLADO - ' + (esRecoleccion ? 'RECOLECCIÓN' : 'ENTREGA'));
+    return html;
 }
 
         function dataURLaBlob(dataURL) {
